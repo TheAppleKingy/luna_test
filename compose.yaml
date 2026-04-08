@@ -1,0 +1,46 @@
+services:
+  payment_handler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      payment_database:
+        condition: service_started
+      payment_rabbitmq:
+        condition: service_healthy
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    env_file:
+      - .example.env
+
+  payment_database:
+    hostname: database
+    image: postgres:18-alpine
+    env_file:
+      - .example.env
+    volumes:
+      - payment_postgres_data:/var/lib/postgresql
+    ports:
+      - "5432:5432"
+
+  payment_rabbitmq:
+    hostname: rabbitmq
+    image: rabbitmq:management-alpine
+    env_file:
+      - .example.env
+    ports:
+      - "15672:15672"
+    volumes:
+      - payment_rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+
+volumes:
+  payment_rabbitmq_data:
+  payment_postgres_data:

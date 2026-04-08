@@ -1,0 +1,9 @@
+from typing import Self, Protocol
+
+
+class UoWInterface(Protocol):
+    async def __aenter__(self) -> Self: ...
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> bool: ...
+
+    def add(self, *ents) -> None: ...
